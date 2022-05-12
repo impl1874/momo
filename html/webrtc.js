@@ -21,6 +21,15 @@ ws.onopen = onWsOpen.bind();
 ws.onerror = onWsError.bind();
 ws.onmessage = onWsMessage.bind();
 
+
+let localStream = null;
+
+if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+  navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(function (stream) {
+    localStream = stream;
+  });
+}
+
 function onWsError(error){
   console.error('ws onerror() ERROR:', error);
 }
@@ -173,7 +182,14 @@ function prepareNewConnection() {
   dataChannel.onmessage = function (event) {
     console.log("Got Data Channel Message:", new TextDecoder().decode(event.data));
   };
-  
+
+  if (null != localStream) {
+    localStream.getTracks().forEach(track => {
+      console.log('add track=' + track.kind);
+      peer.addTrack(track,localStream);
+    });
+  }
+
   return peer;
 }
 
